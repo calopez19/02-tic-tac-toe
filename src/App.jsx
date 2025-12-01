@@ -38,6 +38,12 @@ function App() {
         
       }
     });
+
+    if (boardToCheck.every(square => square !== null)) {
+      let newWinner = false;
+      setWinner(newWinner)
+      console.log(newWinner)
+    }
   }
 
   const  updateBoard = (index) => {
