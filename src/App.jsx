@@ -8,16 +8,49 @@ const TURNS = {
   o: 'O'
 }
 
+const WINNERPOSITIONS = [
+  // Rows
+  [0, 1, 2],
+  [3, 4, 5],
+  [6, 7, 8],
+  // Columns
+  [0, 3, 6],
+  [1, 4, 7],
+  [2, 5, 8],
+  // Diagonals
+  [0, 4, 8],
+  [2, 4, 6]
+]
+
 function App() {
   const [board, setBoard] = useState(Array(9).fill(null))
   const [turn, setTurn] = useState(TURNS.x)
+  const [winner, setWinner] =useState(null)
+
+  const winnerCheck = (boardToCheck) => {
+    WINNERPOSITIONS.forEach(element => {
+      if (boardToCheck[element[0]] !== null && 
+        (boardToCheck[element[0]] === boardToCheck[element[1]]) &&
+         (boardToCheck[element[0]] === boardToCheck[element[2]])) 
+        {
+          let newWinner = boardToCheck[element[0]];
+          setWinner(newWinner);
+        
+      }
+    });
+      
+  }
+
 
   const  updateBoard = (index) => {
+    if (board[index] || winner) return;
     let newTurn = (turn === TURNS.x)? TURNS.o: TURNS.x;
     let newBoard = [... board];
     newBoard[index] = turn;
     setBoard(newBoard);
+    winnerCheck(newBoard);
     setTurn(newTurn);
+
   }
 
   return (
