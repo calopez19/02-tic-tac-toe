@@ -1,49 +1,37 @@
 import { useState } from 'react'
 import './App.css'
 import { Square } from './components/Square.jsx'
+import {TURNS, WINNERPOSITIONS} from './constans.js';
+import { WinnerModal } from './components/WinnerModal.jsx'
 
-
-const TURNS = {
-  x: 'X',
-  o: 'O'
-}
-
-const WINNERPOSITIONS = [
-  // Rows
-  [0, 1, 2],
-  [3, 4, 5],
-  [6, 7, 8],
-  // Columns
-  [0, 3, 6],
-  [1, 4, 7],
-  [2, 5, 8],
-  // Diagonals
-  [0, 4, 8],
-  [2, 4, 6]
-]
 
 function App() {
-  const [board, setBoard] = useState(Array(9).fill(null))
-  const [turn, setTurn] = useState(TURNS.x)
+  const [board, setBoard] = useState(() => {
+  const boardFromStorage = window.localStorage.getItem('board')
+  if (boardFromStorage) return JSON.parse(boardFromStorage)
+  return Array(9).fill(null)
+  })
+
+  const [turn, setTurn] = useState(() => {
+  const turnFromStorage = window.localStorage.getItem('turn')
+  return turnFromStorage ?? TURNS.x
+  })
   const [winner, setWinner] =useState(null)
 
   const winnerCheck = (boardToCheck) => {
-    WINNERPOSITIONS.forEach(element => {
-      if (boardToCheck[element[0]] !== null && 
-        (boardToCheck[element[0]] === boardToCheck[element[1]]) &&
-         (boardToCheck[element[0]] === boardToCheck[element[2]])) 
-        {
-          let newWinner = boardToCheck[element[0]];
-          setWinner(newWinner);
-        
+    for (const combo of WINNERPOSITIONS) {
+      if ((boardToCheck[combo[0]] !== null) &&
+      (boardToCheck[combo[0]] === boardToCheck[combo[1]]) &&
+      (boardToCheck[combo[0]] === boardToCheck[combo[2]])){
+        let newWinner = boardToCheck[combo[0]];
+          console.log(newWinner);
+          return newWinner
+          
       }
-    });
-
-    if (boardToCheck.every(square => square !== null)) {
-      let newWinner = false;
-      setWinner(newWinner)
-      console.log(newWinner)
     }
+
+    if (boardToCheck.every(square => square !== null)) return false
+    return null
   }
 
   const  updateBoard = (index) => {
@@ -51,16 +39,23 @@ function App() {
     let newTurn = (turn === TURNS.x)? TURNS.o: TURNS.x;
     let newBoard = [... board];
     newBoard[index] = turn;
+    const newWinner = winnerCheck(newBoard);
     setBoard(newBoard);
-    winnerCheck(newBoard);
+    setWinner(newWinner);
     setTurn(newTurn);
-
+    //guardar partida
+    window.localStorage.setItem('board', JSON.stringify(newBoard))
+    window.localStorage.setItem('Turn', JSON.stringify(newTurn))
+    window.localStorage.setItem('Winner', JSON.stringify(newWinner ))
+    
   }
 
   const resetGame =() => {
     let newBoard = Array(9).fill(null);
     let newWinner = null;
     let newTurn = TURNS.x;
+    window.localStorage.removeItem('board')
+    window.localStorage.removeItem('turn')
 
     setBoard(newBoard);
     setTurn(newTurn);
@@ -76,6 +71,7 @@ function App() {
           board.map((_,index) => {
             return (
               <Square
+              key={index}
               index={index}
               updateBoard={updateBoard}>
                 {board[index]}
@@ -92,25 +88,7 @@ function App() {
           {TURNS.o}
         </Square>
       </section>
-      {
-        winner !== null && (
-          <section className='winner'>
-            <div className="text">
-              <h2>
-                {
-                  winner ===false? 'empate': 'ganó'
-                }
-              </h2>
-              <header className="win">
-                {winner && <Square>{winner}</Square>}
-              </header>
-              <footer>
-                <button onClick={resetGame}>empezar de nuevo</button>
-              </footer>
-            </div>
-          </section>
-        )
-      }
+      <WinnerModal resetGame={resetGame} winner={winner} />
     </main>
   )
 }
